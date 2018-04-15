@@ -1,0 +1,24 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+require "yaml"
+settings = YAML.load_file File.expand_path("settings.yml", File.dirname(__FILE__))
+provider_env = YAML.load_file File.expand_path("provider_env.yml", File.dirname(__FILE__))
+shell_provider_path = File.expand_path(settings["shell_provider_path"], File.dirname(__FILE__))
+$machine = $machine ? $machine : settings["box"]
+Vagrant.configure(2) do |config|
+    config.vm.define $machine do |machine|
+        machine.vm.hostname = settings["name"]
+        machine.vm.box = settings["parent_box"]
+        machine.vm.provider :virtualbox do |provider|
+            provider.name = settings["name"]
+            provider.memory = settings["memory"]
+            provider.cpus = settings["cpus"]
+        end
+        machine.vm.provision :shell do |provider|
+            provider.path = shell_provider_path
+            provider.privileged = true
+            provider.env = provider_env
+        end
+    end
+end
